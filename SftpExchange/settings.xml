@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<settings>
+  <pathes>
+    <local1>d:\Obmen_Uni\InBev\in\</local1>
+    <local2>d:\Obmen_Uni\InBev\out\doc\</local2>
+    <local3>d:\Obmen_Uni\InBev\out\doc\send\</local3>
+    <local4>d:\Obmen_Uni\InBev\out\Rep\</local4>
+    <local5>d:\Obmen_Uni\InBev\out\Rep\send\</local5>
+    <sftp1>/Export/</sftp1>
+    <sftp2>/Done.Export/</sftp2>
+    <sftp3>/Import/</sftp3>
+    <sftp4>/Reports/</sftp4>
+  </pathes>
+  <connection>
+    <server></server>
+    <port></port>
+    <user></user>
+    <password></password>
+  </connection>
+</settings>
