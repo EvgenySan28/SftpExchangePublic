@@ -1,6 +1,7 @@
 ﻿using System;
 using WinSCP;
 using System.IO;
+using System.Collections.Generic;
 
 //Отправка файлов на SFTP
 //Задача отправлять файлы, забирать файлы, перемещать из папки в папку.
@@ -11,17 +12,9 @@ namespace SftpExchange
 {
     class Program
     {
-        // поля с путями локальными и фтп.
-        static string localPath1;
-        static string localPath2;
-        static string localPath3;
-        static string localPath4;
-        static string localPath5;
-        static string sftpPath1;
-        static string sftpPath2;
-        static string sftpPath3;
-        static string sftpPath4;
-        //стримврайтер
+        // словарь с путями
+        static Dictionary<string, string> pathes;
+        //стримврайтер используется во многих методах, чтобы не открывать, не закрывать.
         static StreamWriter sw;
         static void Main(string[] args)
         {
@@ -34,15 +27,16 @@ namespace SftpExchange
                 //Если что-то из этого не прочитается, то программа закроется с записью в лог.
                 //потому и settingsReader инициализируется тут
                 settingsReader = new SettingsReader("settings.xml");
-                localPath1 = settingsReader.GetValue("local1");
-                localPath2 = settingsReader.GetValue("local2");
-                localPath3 = settingsReader.GetValue("local3");
-                localPath4 = settingsReader.GetValue("local4");
-                localPath5 = settingsReader.GetValue("local5");
-                sftpPath1 = settingsReader.GetValue("sftp1");
-                sftpPath2 = settingsReader.GetValue("sftp2");
-                sftpPath3 = settingsReader.GetValue("sftp3");
-                sftpPath4 = settingsReader.GetValue("sftp4");
+                pathes = new Dictionary<string, string>();
+                pathes.Add("localPath1", settingsReader.GetValue("local1"));
+                pathes.Add("localPath2", settingsReader.GetValue("local2"));
+                pathes.Add("localPath3", settingsReader.GetValue("local3"));
+                pathes.Add("localPath4", settingsReader.GetValue("local4"));
+                pathes.Add("localPath5", settingsReader.GetValue("local5"));
+                pathes.Add("sftpPath1", settingsReader.GetValue("sftp1"));
+                pathes.Add("sftpPath2", settingsReader.GetValue("sftp2"));
+                pathes.Add("sftpPath3", settingsReader.GetValue("sftp3"));
+                pathes.Add("sftpPath4", settingsReader.GetValue("sftp4"));
             }
             catch
             {
@@ -77,9 +71,9 @@ namespace SftpExchange
                     //открываем сессию
                     session.Open(sessionOptions);
                     //последовательность необходимых действий для работы.
-                    GetFileFromFtp(session, sftpPath1, localPath1);
-                    PutFileToFtp(session, localPath2, sftpPath3, localPath3);
-                    PutFileToFtp(session, localPath4, sftpPath4, localPath5);
+                    GetFileFromFtp(session, pathes["sftpPath1"], pathes["localPath1"] );
+                    PutFileToFtp(session, pathes["localPath2"], pathes["sftpPath3"], pathes["localPath3"]);
+                    PutFileToFtp(session, pathes["localPath4"], pathes["sftpPath4"] , pathes["localPath5"] );
                     Console.WriteLine("Отработали.");
                     sw.WriteLine(DateTime.Now + " Отработали");//запись в лог
                     sw.Dispose();
@@ -93,9 +87,14 @@ namespace SftpExchange
                 Console.WriteLine("Error: {0}", e);
                 sw.Dispose();
             }
-            
+            finally
+            {
+                sw.Dispose();
+            }
+
+
         }
-        
+
         /// <summary>
         /// Ограничение лог файла
         /// </summary>
@@ -167,7 +166,7 @@ namespace SftpExchange
                 foreach (TransferEventArgs transfer in transferResult.Transfers)
                 {
                     //перемещаем файлы 
-                    session.MoveFile(transfer.FileName, sftpPath2);
+                    session.MoveFile(transfer.FileName, pathes["sftpPath2"]);
                     //записываем в консоль и лог.
                     Console.WriteLine("Download and move of {0} succeeded", transfer.FileName);
                     sw.WriteLine(DateTime.Now+ " Download and move of {0} succeeded", transfer.FileName);
