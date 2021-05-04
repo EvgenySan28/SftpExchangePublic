@@ -16,10 +16,11 @@ namespace SftpExchange
         static Dictionary<string, string> pathes;
         //стримврайтер используется во многих методах, чтобы не открывать, не закрывать.
         static StreamWriter sw;
+        const string pathToLog = "log.txt";
         static void Main(string[] args)
         {
             LogLenght();//проверка длинны файла лога
-            sw = new StreamWriter(File.Open("log.txt", FileMode.Append));
+            sw = new StreamWriter(File.Open(pathToLog, FileMode.Append));
             SettingsReader settingsReader;
             try
             {
@@ -75,7 +76,7 @@ namespace SftpExchange
                     PutFileToFtp(session, pathes["localPath2"], pathes["sftpPath3"], pathes["localPath3"]);
                     PutFileToFtp(session, pathes["localPath4"], pathes["sftpPath4"] , pathes["localPath5"] );
                     Console.WriteLine("Отработали.");
-                    sw.WriteLine(DateTime.Now + " Отработали");//запись в лог
+                    sw.WriteLine(DateTime.Now + " Отработали");
                     sw.Dispose();
                 }
                 
@@ -96,22 +97,33 @@ namespace SftpExchange
         }
 
         /// <summary>
-        /// Ограничение лог файла
+        /// Ограничение лог файла. Если длинна больше 50 кб, то отрезается 10 кб от начала.
         /// </summary>
         private static void LogLenght()
         {
-            FileInfo fileInfo = new FileInfo("log.txt");
-            if (fileInfo.Length > 50*1024)//Если длина больше 50 кб, то
+            if (File.Exists(pathToLog))
             {
-                FileStream fileStream = File.OpenRead("log.txt"); //Открываем файл лога
-                fileStream.Position =10*1024;//Перемещаемся на позицию 10 килобайт
-                FileStream stream = File.Create("log_tmp.txt");//создаем новый временный файл
-                fileStream.CopyTo(stream);//Копируем старый файл в новый без куска в 10 килобайт
-                stream.Dispose();//Закрываем
-                fileStream.Dispose();//Закрываем
-                File.Move("log_tmp.txt", "log.txt", true);//Перемещаем файл с заменой
+                FileInfo fileInfo = new FileInfo(pathToLog);
+                if (fileInfo.Length > 50 * 1024)
+                {
+                    FileStream fileStream = fileInfo.OpenRead();
+                    fileStream.Position = 10 * 1024;
+                    FileStream stream = File.Create($"tmp{pathToLog}");
+                    fileStream.CopyTo(stream);
+                    stream.Dispose();
+                    fileStream.Dispose();
+                    try
+                    {
+                        File.Move($"tmp{pathToLog}", pathToLog, true);
+                    }
+                    catch
+                    {
+                        Console.WriteLine("Не могу перезаписать файл лога!");
+                    }
+                }
             }
         }
+
         /// <summary>
         /// Поместить файлы на фтп
         /// </summary>
@@ -132,11 +144,9 @@ namespace SftpExchange
                 
                 foreach (TransferEventArgs transfer in transferResult.Transfers)
                 {
-                    //Получаем имя файла
+                    
                     FileInfo fi = new FileInfo(transfer.FileName);
-                    //Перемещаем его
                     File.Move(transfer.FileName, moveTo + fi.Name);
-                    //Выводим на консоль и в лог. 
                     Console.WriteLine("Upload and move of {0} succeeded", transfer.FileName);
                     sw.WriteLine(DateTime.Now + " Upload and move of {0} succeeded", transfer.FileName);
                 }
@@ -147,6 +157,7 @@ namespace SftpExchange
                 Console.WriteLine("Error: {0}", e);
             }
         }
+
         /// <summary>
         /// Получение файла с фтп
         /// </summary>
@@ -165,9 +176,7 @@ namespace SftpExchange
                 // Print results
                 foreach (TransferEventArgs transfer in transferResult.Transfers)
                 {
-                    //перемещаем файлы 
                     session.MoveFile(transfer.FileName, pathes["sftpPath2"]);
-                    //записываем в консоль и лог.
                     Console.WriteLine("Download and move of {0} succeeded", transfer.FileName);
                     sw.WriteLine(DateTime.Now+ " Download and move of {0} succeeded", transfer.FileName);
                 }
