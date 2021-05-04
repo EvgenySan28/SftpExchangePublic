@@ -3,11 +3,13 @@ using WinSCP;
 using System.IO;
 using System.Collections.Generic;
 
-//Отправка файлов на SFTP
-//Задача отправлять файлы, забирать файлы, перемещать из папки в папку.
-//Настраиваться пути, пароли должны из файла XML
-//к сожалению, стандартных путей работы с SFTP нет, пришлось подключать стороннюю библиотеку, которая 
-//работает как интерфейс для программы winscp
+/*
+Отправка файлов на SFTP
+Задача отправлять файлы, забирать файлы, перемещать из папки в папку.
+Настраиваться пути, пароли должны из файла XML
+к сожалению, стандартных путей работы с SFTP нет, пришлось подключать стороннюю библиотеку, которая 
+работает как интерфейс для программы winscp
+*/
 namespace SftpExchange
 {
     class Program
@@ -17,6 +19,7 @@ namespace SftpExchange
         //стримврайтер используется во многих методах, чтобы не открывать, не закрывать.
         static StreamWriter sw;
         const string pathToLog = "log.txt";
+        const string pathToSettings = "settings.xml";
         static void Main(string[] args)
         {
             LogLenght();//проверка длинны файла лога
@@ -24,10 +27,12 @@ namespace SftpExchange
             SettingsReader settingsReader;
             try
             {
-                //Попытка прочитать файл настроек и пути
-                //Если что-то из этого не прочитается, то программа закроется с записью в лог.
-                //потому и settingsReader инициализируется тут
-                settingsReader = new SettingsReader("settings.xml");
+                /*
+                Попытка прочитать файл настроек и пути
+                Если что-то из этого не прочитается, то программа закроется с записью в лог.
+                потому и settingsReader инициализируется тут
+                */
+                settingsReader = new SettingsReader(pathToSettings);
                 pathes = new Dictionary<string, string>();
                 pathes.Add("localPath1", settingsReader.GetValue("local1"));
                 pathes.Add("localPath2", settingsReader.GetValue("local2"));
@@ -49,10 +54,12 @@ namespace SftpExchange
 
             try
             {
-                // Установка опций сессии 
-                //методы сторонней библиотеки. 
-                //из файла настроек читаем имя сервера, порт, юзер и пароль.
-                //если что-то идет не так, подключиться не получится
+                /*
+                Установка опций сессии
+                методы сторонней библиотеки. 
+                из файла настроек читаем имя сервера, порт, юзер и пароль.
+                если что-то идет не так, подключиться не получится
+                */
                 SessionOptions sessionOptions = new SessionOptions
                 {
                     Protocol = Protocol.Sftp,
