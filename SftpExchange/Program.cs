@@ -14,8 +14,7 @@ namespace SftpExchange
 {
     class Program
     {
-        // словарь с путями
-        static Dictionary<string, string> pathes;
+        static Settings settings;
         //стримврайтер используется во многих методах, чтобы не открывать, не закрывать.
         static StreamWriter sw;
         const string pathToLog = "log.txt";
@@ -24,33 +23,7 @@ namespace SftpExchange
         {
             LogLenght();//проверка длинны файла лога
             sw = new StreamWriter(File.Open(pathToLog, FileMode.Append));
-            SettingsReader settingsReader;
-            try
-            {
-                /*
-                Попытка прочитать файл настроек и пути
-                Если что-то из этого не прочитается, то программа закроется с записью в лог.
-                потому и settingsReader инициализируется тут
-                */
-                settingsReader = new SettingsReader(pathToSettings);
-                pathes = new Dictionary<string, string>();
-                pathes.Add("localPath1", settingsReader.GetValue("local1"));
-                pathes.Add("localPath2", settingsReader.GetValue("local2"));
-                pathes.Add("localPath3", settingsReader.GetValue("local3"));
-                pathes.Add("localPath4", settingsReader.GetValue("local4"));
-                pathes.Add("localPath5", settingsReader.GetValue("local5"));
-                pathes.Add("sftpPath1", settingsReader.GetValue("sftp1"));
-                pathes.Add("sftpPath2", settingsReader.GetValue("sftp2"));
-                pathes.Add("sftpPath3", settingsReader.GetValue("sftp3"));
-                pathes.Add("sftpPath4", settingsReader.GetValue("sftp4"));
-            }
-            catch
-            {
-                Console.WriteLine("Не могу прочитать файл настроек!");
-                sw.WriteLine(DateTime.Now + " Не могу прочитать файл настроек!");
-                sw.Dispose();
-                return;
-            }
+            settings = new Settings(pathToSettings);
 
             try
             {
@@ -63,10 +36,10 @@ namespace SftpExchange
                 SessionOptions sessionOptions = new SessionOptions
                 {
                     Protocol = Protocol.Sftp,
-                    HostName = settingsReader.GetValue("server"),
-                    PortNumber = int.Parse(settingsReader.GetValue("port")),
-                    UserName = settingsReader.GetValue("user"),
-                    Password = settingsReader.GetValue("password")
+                    HostName = settings.server,
+                    PortNumber = Int32.Parse(settings.port),
+                    UserName = settings.user,
+                    Password = settings.password
 
                 };
 
@@ -79,15 +52,13 @@ namespace SftpExchange
                     //открываем сессию
                     session.Open(sessionOptions);
                     //последовательность необходимых действий для работы.
-                    GetFileFromFtp(session, pathes["sftpPath1"], pathes["localPath1"] );
-                    PutFileToFtp(session, pathes["localPath2"], pathes["sftpPath3"], pathes["localPath3"]);
-                    PutFileToFtp(session, pathes["localPath4"], pathes["sftpPath4"] , pathes["localPath5"] );
+                    GetFileFromFtp(session,settings.sftpPath1, settings.localPath1);
+                    PutFileToFtp(session,settings.localPath2, settings.sftpPath3,settings.localPath3);
+                    PutFileToFtp(session,settings.localPath4,settings.sftpPath4,settings.localPath5);
                     Console.WriteLine("Отработали.");
                     sw.WriteLine(DateTime.Now + " Отработали");
                     sw.Dispose();
                 }
-                
-
             }
             catch (Exception e)
             {
@@ -99,8 +70,6 @@ namespace SftpExchange
             {
                 sw.Dispose();
             }
-
-
         }
 
         /// <summary>
@@ -183,7 +152,7 @@ namespace SftpExchange
                 // Print results
                 foreach (TransferEventArgs transfer in transferResult.Transfers)
                 {
-                    session.MoveFile(transfer.FileName, pathes["sftpPath2"]);
+                    session.MoveFile(transfer.FileName,settings.sftpPath2);
                     Console.WriteLine("Download and move of {0} succeeded", transfer.FileName);
                     sw.WriteLine(DateTime.Now+ " Download and move of {0} succeeded", transfer.FileName);
                 }
